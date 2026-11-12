@@ -42,4 +42,15 @@ describe('учебное приложение',()=>{
   expect(screen.getByText(/Запрос выполнен верно/)).toBeTruthy();
   expect(JSON.parse(localStorage.getItem('learning-1c-v1')!).completedTaskIds).toContain('task-06-query-select');
  });
+ it('отменяет проведение документа и обновляет движения',()=>{
+  render(<App/>); fireEvent.click(screen.getByRole('button',{name:'Предприятие'}));
+  fireEvent.click(screen.getByRole('button',{name:'Документы'}));
+  fireEvent.click(screen.getByRole('button',{name:'+ Добавить строку'}));
+  fireEvent.click(screen.getByRole('button',{name:'Провести документ'}));
+  fireEvent.click(screen.getByRole('button',{name:'Отменить проведение'}));
+  expect(screen.getByText('Проведение отменено.')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Провести выбранный'})).toBeTruthy();
+  expect(screen.getByText('Проводок нет.')).toBeTruthy();
+ });
+
 });

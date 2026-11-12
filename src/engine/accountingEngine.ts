@@ -524,13 +524,7 @@ export function buildOSVReport(
 
     const calcNet = (dt: number, kt: number): [number, number] => {
       const net = Number((dt - kt).toFixed(2));
-      if (meta.kind === 'Активный') {
-        return net >= 0 ? [net, 0] : [net, 0];
-      }
-      if (meta.kind === 'Пассивный') {
-        const pNet = Number((kt - dt).toFixed(2));
-        return [0, pNet];
-      }
+      // Показываем сальдо по стороне знака; это свёрнутый остаток без аналитики.
       return net >= 0 ? [net, 0] : [0, Math.abs(net)];
     };
 
@@ -570,4 +564,18 @@ export function buildOSVReport(
       closeCredit: Number(totCloseKt.toFixed(2)),
     },
   };
+}
+
+/** Replay chronologically and reject the entire change if a later document would become invalid. */
+export function rebuildRegistersChecked(state: InfobaseState): {ok: true; accountingEntries: AccountingEntry[]; stockMovements: StockMovement[]} | {ok: false; errorMessage: string} {
+  const accountingEntries: AccountingEntry[] = [];
+  const stockMovements: StockMovement[] = [];
+  const docs = state.documents.filter(d => d.posted && !d.markedForDeletion).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  for (const doc of docs) {
+    const result = generateMovementsForDocument(doc, state, stockMovements, true);
+    if (!result.ok) return {ok:false,errorMessage:result.errorMessage || `Не удалось провести ${getDocPresentation(doc)}`};
+    accountingEntries.push(...result.entries);
+    stockMovements.push(...result.stockMovements);
+  }
+  return {ok:true,accountingEntries,stockMovements};
 }

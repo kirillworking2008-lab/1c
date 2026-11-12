@@ -1,4 +1,5 @@
 import { AcademyTask, InfobaseState } from '../types/oneC';
+import { INITIAL_COUNTERPARTIES, INITIAL_NOMENCLATURE } from './initialData';
 import { QueryResultTable } from '../engine/queryEngine1C';
 import { BSLExecutionResult } from '../engine/bslInterpreter';
 
@@ -80,7 +81,7 @@ export const ACADEMY_TASKS: AcademyTask[] = [
 3. Отражает дебиторскую задолженность покупателя и выручку: **Дт 62.01 — Кт 90.01.1**.
 4. Начисляет НДС к уплате в бюджет: **Дт 90.03 — Кт 68.02**.`,
     objective:
-      'Перейдите в раздел «Продажи», создайте и ПРОВЕДИТЕ новый документ «Реализация товаров и услуг» покупателю (минимум 2 проведенных документа Реализации в базе). Посмотрите печатную форму ТОРГ-12 / УПД!',
+      'Перейдите в раздел «Продажи», создайте и ПРОВЕДИТЕ новый документ «Реализация товаров и услуг» покупателю (минимум 2 проведенных документа Реализации в базе). Выберите документ в журнале и посмотрите его учебные проводки!',
     hints: [
       'Откройте раздел «Продажи», нажмите «Создать реализацию».',
       'Выберите товар, который есть на Основном складе (например, Ноутбук рабочий ProBook 15" — 1 или 2 шт.), и нажмите «Провести».',
@@ -128,7 +129,7 @@ export const ACADEMY_TASKS: AcademyTask[] = [
 	ЦенаПродажи > 20000
 УПОРЯДОЧИТЬ ПО
 	ЦенаПродажи УБЫВ`,
-    theory: `Программист 1С никогда не перебирает базу циклами — для чтения данных используется встроенный **Язык запросов 1С** (русскоязычный диалект SQL, работающий поверх объектной модели метаданных).
+    theory: `Для эффективного чтения данных часто используется встроенный **Язык запросов 1С** (русскоязычный диалект SQL, работающий поверх объектной модели метаданных).
 Базовый синтаксис:
 \`\`\`bsl
 ВЫБРАТЬ
@@ -339,7 +340,7 @@ export const ACADEMY_TASKS: AcademyTask[] = [
     targetMode: 'configurator',
     checkType: 'state',
     theory: `Вся разработка в 1С ведется в режиме **Конфигуратор** через **Дерево объектов конфигурации**.
-Программист не пишет \`CREATE TABLE\` вручную: он добавляет в дерево новый **Справочник** или **Документ** (например, *Справочник.ДоговорыКонтрагентов* или *Документ.АвансовыйОтчет*), задает его реквизиты и типы данных, а при нажатии **«Обновить конфигурацию базы данных (F7)»** платформа автоматически реструктурирует таблицы СУБД и генерирует управляемые формы «Такси»!`,
+Программист не пишет \`CREATE TABLE\` вручную: он добавляет в дерево новый **Справочник** или **Документ** (например, *Справочник.ДоговорыКонтрагентов* или *Документ.АвансовыйОтчет*), задает его реквизиты и типы данных, а при обновлении конфигурации базы данных платформа изменяет структуру хранения и может предоставить стандартные формы. В тренажёре объект является только учебным описанием.`,
     objective:
       'В режиме «Конфигуратор» в левом Дереве метаданных нажмите кнопку «+ Объект» рядом с веткой «Справочники» или «Документы», создайте собственный объект метаданных (с минимум 1 реквизитом) и примените изменения.',
     hints: [
@@ -366,9 +367,8 @@ export function validateAcademyTask(
   switch (task.id) {
     case 'task-01-catalog-cp': {
       if (state.counterparties.length >= 5) {
-        const latest = state.counterparties[state.counterparties.length - 1];
-        const cleanInn = latest.inn.replace(/\D/g, '');
-        if (cleanInn.length === 10 || cleanInn.length === 12) {
+        const latest = state.counterparties.find(c => !INITIAL_COUNTERPARTIES.some(initial => initial.id === c.id) && /^(\d{10}|\d{12})$/.test(c.inn));
+        if (latest) {
           return {
             passed: true,
             message: `Отлично! Контрагент «${latest.name}» (ИНН ${latest.inn}) записан в справочник Контрагенты.`,
@@ -376,7 +376,7 @@ export function validateAcademyTask(
         }
         return {
           passed: false,
-          message: `Контрагент добавлен, но его ИНН («${latest.inn}») должен состоять из 10 или 12 цифр!`,
+          message: 'Добавьте нового контрагента с ИНН из 10 или 12 цифр.',
         };
       }
       return {
@@ -387,9 +387,9 @@ export function validateAcademyTask(
 
     case 'task-02-catalog-nom': {
       const goodsWith20 = state.nomenclature.filter(
-        (n) => n.type === 'Товар' && n.vatRate === '20%' && n.salePrice > 0
+        (n) => !INITIAL_NOMENCLATURE.some(initial => initial.id === n.id) && n.type === 'Товар' && n.vatRate === '20%' && n.salePrice > 0
       );
-      if (state.nomenclature.length >= 6 && goodsWith20.length >= 3) {
+      if (goodsWith20.length >= 1) {
         return {
           passed: true,
           message: 'Превосходно! Новая карточка товара со счетом учета 41.01 и ставкой НДС 20% добавлена в Номенклатуру.',
@@ -458,7 +458,10 @@ export function validateAcademyTask(
       if (
         qLow.includes('справочник.номенклатура') &&
         qLow.includes('где') &&
-        lastQueryResult.rows.length > 0
+        /ценапродажи\s*>\s*20000/i.test(lastQueryText) &&
+        lastQueryResult.columns.some(c=>c.toLowerCase()==='наименование') &&
+        lastQueryResult.columns.some(c=>c.toLowerCase()==='ценапродажи') &&
+        lastQueryResult.rows.length > 0 && lastQueryResult.rows.every(r=>Number(r.ЦенаПродажи)>20000)
       ) {
         return {
           passed: true,

@@ -10,7 +10,7 @@ export interface QueryResultTable {
 }
 
 /**
- * Полноценный интерпретатор Языка Запросов 1С:Предприятие 8.3 (русский и английский синтаксис)
+ * Учебный интерпретатор ограниченного подмножества языка запросов.
  * Поддерживает: ВЫБРАТЬ, ПЕРВЫЕ N, РАЗЛИЧНЫЕ, КАК, ИЗ, ГДЕ, СГРУППИРОВАТЬ ПО,
  * СУММА(), КОЛИЧЕСТВО(), МАКСИМУМ(), МИНИМУМ(), СРЕДНЕЕ(), УПОРЯДОЧИТЬ ПО (ВОЗР/УБЫВ),
  * параметры &Параметр, виртуальную таблицу РегистрНакопления.ТоварыНаСкладах.Остатки
@@ -52,8 +52,10 @@ export function execute1CQuery(
 
     // Подстановка параметров &ИмяПараметра
     for (const [k, v] of Object.entries(params)) {
-      const regex = new RegExp(`&${k}\\b`, 'gi');
-      const replacement = typeof v === 'number' ? String(v) : `"${String(v)}"`;
+      if (!/^[А-Яа-яЁёA-Za-z_][А-Яа-яЁёA-Za-z0-9_]*$/.test(k)) throw new Error('Недопустимое имя параметра');
+      const regex = new RegExp(`&${k}(?![А-Яа-яЁёA-Za-z0-9_])`, 'gi');
+      if (typeof v === 'string' && v.includes('"')) throw new Error('Кавычки в параметрах пока не поддерживаются');
+      const replacement = typeof v === 'number' ? String(v) : typeof v === 'boolean' ? (v ? 'ИСТИНА' : 'ЛОЖЬ') : `"${String(v)}"`;
       q = q.replace(regex, replacement);
     }
 
@@ -234,11 +236,18 @@ export function execute1CQuery(
 }
 
 function splitByKeyword(input: string, keywordRegex: RegExp): [string, string] | null {
-  const match = keywordRegex.exec(input);
-  if (!match || match.index === undefined) return null;
-  const before = input.slice(0, match.index);
-  const after = input.slice(match.index + match[0].length);
-  return [before, after];
+  let quoted = false, depth = 0;
+  for (let i=0; i<input.length; i++) {
+    const c=input[i];
+    if (c==='"') { if (quoted && input[i+1]==='"') {i++;continue;} quoted=!quoted;continue; }
+    if (quoted) continue;
+    if (c==='(') {depth++;continue;} if(c===')'){depth--;continue;}
+    if(depth!==0) continue;
+    const match=input.slice(i).match(new RegExp('^(?:'+keywordRegex.source+')', 'i'));
+    const isIdent=(v:string|undefined)=>!!v && /[А-Яа-яЁёA-Za-z0-9_]/.test(v);
+    if(match && !isIdent(input[i-1]) && !isIdent(input[i+match[0].length])) return [input.slice(0,i),input.slice(i+match[0].length)];
+  }
+  return null;
 }
 
 function splitCommaOutsideParens(str: string): string[] {
@@ -363,7 +372,8 @@ function resolveDataSource(
     }
   }
 
-  // Срезаем скобки параметров виртуальной таблицы
+  // Игнорировать параметры виртуальной таблицы было бы опасно: выдаём явную ошибку.
+  if (/\(\s*[^)\s]+/.test(cleaned)) throw new Error('Параметры виртуальных таблиц пока не поддерживаются');
   const baseTable = cleaned.replace(/\([^)]*\)/g, '').trim();
   const lower = baseTable.toLowerCase();
 
@@ -480,6 +490,8 @@ function resolveDataSource(
   // 7. Документы (ПоступлениеТоваровУслуг, РеализацияТоваровУслуг и др. или общий ЖурналДокументов)
   if (lower.startsWith('документ.')) {
     const docTypePart = baseTable.split('.')[1];
+    const validDocTypes = ['ПоступлениеТоваровУслуг','РеализацияТоваровУслуг','ПриходныйКассовыйОрдер','РасходныйКассовыйОрдер','ПоступлениеНаРасчетныйСчет','СписаниеСРасчетногоСчета','НачислениеЗарплаты','ОперацияБух'];
+    if (!validDocTypes.some(t=>t.toLowerCase()===docTypePart?.toLowerCase()) || (baseTable.split('.')[2] && baseTable.split('.')[2].toLowerCase()!=='товары') || baseTable.split('.').length>3) throw new Error(`Неизвестная таблица ${baseTable}`);
     const cpMap = new Map(state.counterparties.map((c) => [c.id, c.name]));
     const whMap = new Map(state.warehouses.map((w) => [w.id, w.name]));
     const orgMap = new Map(state.organizations.map((o) => [o.id, o.name]));
@@ -635,20 +647,19 @@ function evaluateExpression(expr: string, row: Record<string, any>): any {
     if (op === '/') return rv !== 0 ? Number((lv / rv).toFixed(2)) : 0;
   }
 
-  return getFieldValue(row, trimmed);
+  const value = getFieldValue(row, trimmed);
+  if (value === undefined) throw new Error(`Поле не найдено или выражение не поддерживается: ${trimmed}`);
+  return value;
 }
 
 function evaluateWhereCondition(cond: string, row: Record<string, any>, tableAlias: string): boolean {
-  // Разбиваем по ИЛИ / OR
-  const orParts = cond.split(/\s+(?:ИЛИ|OR)\s+/i);
-  if (orParts.length > 1) {
-    return orParts.some((part) => evaluateWhereCondition(part, row, tableAlias));
-  }
-  // Разбиваем по И / AND
-  const andParts = cond.split(/\s+(?:И|AND)\s+/i);
-  if (andParts.length > 1) {
-    return andParts.every((part) => evaluateWhereCondition(part, row, tableAlias));
-  }
+  // Делим логические операции только вне строк и скобок.
+  const trimmed=cond.trim();
+  const orSplit=splitByKeyword(trimmed, /(?:ИЛИ|OR)/i);
+  if(orSplit) {const a=evaluateWhereCondition(orSplit[0],row,tableAlias);const b=evaluateWhereCondition(orSplit[1],row,tableAlias);return a||b;}
+  const andSplit=splitByKeyword(trimmed, /(?:И|AND)/i);
+  if(andSplit) {const a=evaluateWhereCondition(andSplit[0],row,tableAlias);const b=evaluateWhereCondition(andSplit[1],row,tableAlias);return a&&b;}
+  if(trimmed.startsWith('(') && trimmed.endsWith(')')) return evaluateWhereCondition(trimmed.slice(1,-1),row,tableAlias);
 
   let expr = cond.trim();
   let negate = false;
@@ -661,7 +672,7 @@ function evaluateWhereCondition(cond: string, row: Record<string, any>, tableAli
   const likeMatch = expr.match(/^([А-Яа-яЁёA-Za-z0-9_.]+)\s+(?:ПОДОБНО|LIKE)\s+"([^"]*)"$/i);
   if (likeMatch) {
     const field = stripTableAlias(likeMatch[1], tableAlias);
-    const pattern = likeMatch[2].replace(/%/g, '.*').replace(/_/g, '.');
+    const pattern = likeMatch[2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
     const val = String(getFieldValue(row, field) ?? '');
     const res = new RegExp(`^${pattern}$`, 'i').test(val);
     return negate ? !res : res;
@@ -675,6 +686,7 @@ function evaluateWhereCondition(cond: string, row: Record<string, any>, tableAli
   const rawRhs = cmpMatch[3].trim();
 
   const lhs = getFieldValue(row, field);
+  if (lhs === undefined) throw new Error(`Поле не найдено: ${field}`);
   let rhs: any = rawRhs;
 
   if (rawRhs.startsWith('"') && rawRhs.endsWith('"')) {
@@ -687,15 +699,16 @@ function evaluateWhereCondition(cond: string, row: Record<string, any>, tableAli
     rhs = Number(rawRhs);
   } else {
     rhs = getFieldValue(row, stripTableAlias(rawRhs, tableAlias));
+    if (rhs === undefined) throw new Error(`Неизвестное значение: ${rawRhs}`);
   }
 
   let ok = false;
   if (op === '=') ok = String(lhs) === String(rhs) || lhs === rhs;
   else if (op === '<>' || op === '!=') ok = lhs !== rhs;
-  else if (op === '>') ok = Number(lhs) > Number(rhs);
-  else if (op === '<') ok = Number(lhs) < Number(rhs);
-  else if (op === '>=') ok = Number(lhs) >= Number(rhs);
-  else if (op === '<=') ok = Number(lhs) <= Number(rhs);
+  else if (op === '>') ok = lhs > rhs;
+  else if (op === '<') ok = lhs < rhs;
+  else if (op === '>=') ok = lhs >= rhs;
+  else if (op === '<=') ok = lhs <= rhs;
 
   return negate ? !ok : ok;
 }

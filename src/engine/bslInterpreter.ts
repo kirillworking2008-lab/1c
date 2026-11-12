@@ -22,7 +22,7 @@ class BreakSignal {}
 class ContinueSignal {}
 
 /**
- * Реальный интерпретатор встроенного языка 1С:Предприятие 8.3 (BSL)
+ * Учебный интерпретатор ограниченного подмножества BSL
  * Поддерживает русский и английский синтаксис:
  * Перем, Процедура..КонецПроцедуры, Функция..КонецФункции, Если..Тогда..ИначеЕсли..Иначе..КонецЕсли,
  * Для..По..Цикл..КонецЦикла, Для Каждого..Из..Цикл, Пока..Цикл, Возврат, Прервать, Продолжить,
@@ -999,7 +999,9 @@ class BSLInterpreter {
       return Number(args[0] || 0);
     }
     if (low === 'текущаядата' || low === 'currentdate') {
-      return '2026-11-12 12:00:00';
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
     }
     if (low === 'значениезаполнено' || low === 'valueisfilled') {
       const v = args[0];
