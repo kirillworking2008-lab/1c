@@ -1,6 +1,6 @@
 {
   "appId": "ru.simulator1c.enterprise83",
-  "appName": "Учебный тренажёр",
+  "appName": "1С Учебный",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
