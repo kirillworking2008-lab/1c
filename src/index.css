@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: "Segoe UI", Tahoma, Roboto, Arial, sans-serif;
+    font-size: 13px;
+    color: #1f1f1f;
+    background-color: #f3f3f3;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Custom Windows / 1C scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-left: 1px solid #dfdfdf;
+}
+::-webkit-scrollbar-thumb {
+  background: #c8c8c8;
+  border: 2px solid #f0f0f0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a6a6a6;
+}
+
+/* 1C Taxi button style */
+.btn-1c {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[12.5px] rounded-[2px] border border-[#b8b8b8] bg-gradient-to-b from-white to-[#ededed] text-[#222] shadow-[0_1px_0_rgba(0,0,0,0.04)] hover:border-[#8e8e8e] hover:from-[#fcfcfc] hover:to-[#e4e4e4] active:from-[#e2e2e2] active:to-[#efefef] transition-colors cursor-pointer select-none;
+}
+
+.btn-1c-primary {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 text-[12.5px] font-semibold rounded-[2px] border border-[#cfa000] bg-gradient-to-b from-[#ffe97d] to-[#ffd230] text-[#222] shadow-[0_1px_0_rgba(0,0,0,0.06)] hover:from-[#ffef99] hover:to-[#ffca14] active:from-[#f6c400] active:to-[#ffe066] transition-colors cursor-pointer select-none;
+}
+
+.input-1c {
+  @apply px-2 py-1 text-[13px] bg-white border border-[#a9a9a9] rounded-[1px] focus:outline-none focus:border-[#e5a800] focus:ring-1 focus:ring-[#ffd54f] select-text;
+}
+
+.table-1c {
+  @apply w-full border-collapse text-[12.5px] bg-white;
+}
+.table-1c th {
+  @apply bg-[#f3f3f3] border border-[#d0d0d0] px-2 py-1 text-left font-normal text-[#333] select-none whitespace-nowrap;
+}
+.table-1c td {
+  @apply border border-[#e2e2e2] px-2 py-1 text-[#1c1c1c];
+}
+.table-1c tr:hover td {
+  @apply bg-[#fff9e2];
+}
+.table-1c tr.selected td {
+  @apply bg-[#ffefb4] border-y-[#e6c34a];
+}
+
+/* Configurator Classic Windows style */
+.win-panel {
+  @apply bg-[#f0f0f0] border border-[#a0a0a0];
+}
+.win-toolbar-btn {
+  @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-[12px] border border-transparent hover:border-[#8a8a8a] hover:bg-[#e5f1fb] active:bg-[#cce4f7] rounded-[1px] cursor-pointer select-none;
+}
+body {font-size:14px;background:#f4f3ef} .app{height:100%;display:flex;flex-direction:column} header{background:#fff;border-bottom:1px solid #e4e0d6;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:800;letter-spacing:.07em;font-size:14px}.brand span{font-weight:400;letter-spacing:0;color:#777}.sub{font-size:12px;color:#777}.layout{display:flex;min-height:0;flex:1}nav{width:210px;flex-shrink:0;background:#fff;border-right:1px solid #e4e0d6;padding:22px 12px;overflow:auto;display:flex;flex-direction:column;gap:3px}nav button{text-align:left;padding:11px 13px;border-radius:5px;color:#555;font-weight:500}nav button:hover{background:#f7f5ee}nav button.active{background:#fff1bc;color:#594600;font-weight:700}.progress{margin: auto 8px 0;padding:18px 10px 0;border-top:1px solid #eee;color:#999;font-size:10px;letter-spacing:.07em;line-height:1.8}.progress b{font-size:20px;color:#333;letter-spacing:0}main{flex:1;overflow:auto;padding:28px 36px;max-width:1500px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.top small{color:#a38e55;letter-spacing:.12em;font-size:10px;font-weight:bold}.top h1{font-size:26px;font-weight:700;margin:4px 0 0}.hero{background:#ffe18a;border:1px solid #f1d577;border-radius:8px;padding:32px;display:flex;justify-content:space-between;min-height:240px}.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.12em;color:#806400}.hero h2,article h2{font-size:28px;line-height:1.2;font-weight:750;margin:12px 0}.hero p{max-width:440px;color:#665a3c;margin:0 0 20px;line-height:1.6}.hero-art{align-self:center;text-align:center;padding:20px;color:#5f4c16}.hero-art span{display:inline-flex;background:#fff9e2;border:1px solid #e7c45e;border-radius:8px;width:70px;height:70px;align-items:center;justify-content:center;font-size:26px;font-weight:bold;box-shadow:0 5px 0 #e9ca70}.hero-art i{padding:0 20px}.hero-art div{margin-top:18px;font-size:11px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}.cards button,.panel,article{background:white;border:1px solid #e4e0d6;border-radius:7px;padding:20px;text-align:left}.cards button:hover{border-color:#dfbf5f}.cards b{font-size:11px;color:#b39b5d}.cards h3,.panel h3,article h3,main>h3{font-size:16px;font-weight:700;margin:12px 0}.cards p,.panel p{color:#777;font-size:12px;margin-bottom:15px}.cards span{color:#8c6b00;font-weight:600;font-size:12px}.disclaimer{color:#888;font-size:12px;line-height:1.6;margin-top:24px}.notice{white-space:pre-wrap;background:#fff5d6;border:1px solid #e8cf7c;border-radius:4px;padding:12px;margin:12px 0;display:flex;justify-content:space-between;gap:20px}.form{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.form input,.form select{min-width:150px;max-width:300px}.tablewrap{overflow:auto;background:white;border:1px solid #ddd;margin:16px 0}.table-1c th,.table-1c td{padding:9px;white-space:nowrap}.editor{display:block;width:100%;min-height:300px;background:#fff;border:1px solid #d4d4d4;border-radius:4px;padding:14px;margin:15px 0;font:13px/1.6 Consolas,monospace;resize:vertical;user-select:text}.output{background:#27312e;color:#d2eddb;padding:16px;white-space:pre-wrap;margin-top:15px;border-radius:4px}.academy{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:18px}.lessons{display:flex;flex-direction:column;gap:4px}.lessons button{display:flex;gap:10px;text-align:left;padding:10px;border-radius:4px;color:#555}.lessons button.selected{background:#fff0bb;color:#332800}.lessons button span{font-weight:bold;color:#a58c46}.lessons small{display:block;color:#999;margin-top:3px}.theory{white-space:pre-wrap;line-height:1.7;color:#555}article p{line-height:1.65}details{margin:18px 0;color:#6d5a22}summary{cursor:pointer;font-weight:bold}@media(max-width:700px){header{padding:10px 14px}.sub{display:none}.layout{flex-direction:column}nav{width:auto;flex-direction:row;overflow-x:auto;padding:6px;border-right:0;border-bottom:1px solid #ddd}nav button{white-space:nowrap;padding:9px}.progress{display:none}main{padding:20px 15px}.hero{padding:22px}.hero-art{display:none}.cards{grid-template-columns:1fr}.academy{grid-template-columns:1fr}.lessons{max-height:180px;overflow:auto}.hero h2,article h2{font-size:22px}}
+/* Учебное рабочее пространство в духе настольных учётных систем */
+header{background:linear-gradient(#ffea9e,#f9d66b);border-bottom:1px solid #c8a847;padding:9px 16px}.appmark{display:inline-flex;background:#9f2e21;color:#fff!important;border-radius:2px;width:25px;height:25px;align-items:center;justify-content:center;font-weight:bold;margin-right:8px}.brand{letter-spacing:0} .brand span{color:#685723} .sub{color:#685723}nav{background:#f3f2ee;border-right:1px solid #c9c7bf;border-top:1px solid white}nav button{border-radius:2px}nav button.active{border-left:3px solid #c69300;background:#ffe79a;padding-left:10px}main{background:#f7f7f5}.top{border-bottom:1px solid #dadad5;padding-bottom:14px}.top h1{font-size:23px}.panel,.cards button,article{border-radius:2px}.hero{border-radius:2px}.config-layout{display:grid;grid-template-columns:260px 1fr;gap:12px}.config-tree{background:#fff;border:1px solid #bcbcbc;min-height:350px;padding:12px;line-height:2;font-size:13px}.config-tree h3{background:#eee;border-bottom:1px solid #ccc;margin:-12px -12px 10px;padding:8px 12px;font-weight:600}.tree-indent{padding-left:14px}.tree-indent2{padding-left:32px}.tree-indent2 small{color:#888}.metadata-form{display:flex;flex-direction:column;gap:12px;max-width:400px;margin:20px 0}.metadata-form label{display:flex;flex-direction:column;gap:5px}.metadata-form button{align-self:flex-start}@media(max-width:700px){.config-layout{grid-template-columns:1fr}.config-tree{min-height:0}.brand span:not(.appmark){display:none}}

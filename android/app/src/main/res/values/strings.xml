@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Учебный тренажёр</string>
+    <string name="title_activity_main">Учебный тренажёр</string>
+    <string name="package_name">ru.simulator1c.enterprise83</string>
+    <string name="custom_url_scheme">ru.simulator1c.enterprise83</string>
+</resources>
