@@ -19,6 +19,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - run: npm ci
+      - run: npm test
       - run: npm run build && npx cap sync android
       - run: chmod +x gradlew && ./gradlew assembleDebug
         working-directory: android
